@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veiled Hearts</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+
+    .book {
+      position: relative;
+      width: 90vw;
+      max-width: 400px;
+      height: 60vh;
+      max-height: 600px;
+      perspective: 2000px;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #f8f1e9;
+      transform-origin: left;
+      transition: transform 0.7s ease-in-out;
+      backface-visibility: hidden;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    .page:not(.flipped) {
+      transform: rotateY(0deg);
+    }
+
+    .page.flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Vertical stacked pages effect on the right side for all pages except the end page */
+    .page:not(#page-9)::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -2px;
+      width: 12px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        #f8f1e9 0,
+        #f8f1e9 2px,
+        #e0d8c9 2px,
+        #e0d8c9 4px
+      );
+      box-shadow: inset -3px 0 8px rgba(0,0,0,0.2), 2px 0 5px rgba(0,0,0,0.1);
+      z-index: -1;
+    }
+
+    /* Page numbers for content pages */
+    .page:not(.cover):not(.end)::before {
+      content: attr(data-page);
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.9em;
+      color: #666;
+      font-style: italic;
+    }
+
+    .cover {
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1519744792095-2f2205e87b6f') no-repeat center/cover;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Cinzel', serif;
+      z-index: 10;
+      border: 2px solid #4a2c2a;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .cover h1 {
+      font-size: 2.5em;
+      text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .cover p {
+      font-size: 1.2em;
+      font-style: italic;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    }
+
+    .page img {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+
+    .page blockquote {
+      font-style: italic;
+      text-align: center;
+      color: #333;
+      font-size: 1.1em;
+      max-width: 80%;
+      pointer-events: none;
+    }
+
+    .page cite {
+      display: block;
+      margin-top: 10px;
+      color: #666;
+      font-size: 0.9em;
+      pointer-events: none;
+    }
+
+    .end {
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1519744792095-2f2205e87b6f') no-repeat center/cover;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: 'Cinzel', serif;
+      border: 2px solid #4a2c2a;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+
+    .end h2 {
+      font-size: 2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      margin-bottom: 15px;
+    }
+
+    .end .author-bio {
+      font-size: 0.95em;
+      font-style: italic;
+      max-width: 80%;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      margin-bottom: 15px;
+    }
+
+    .end .publisher {
+      font-size: 0.9em;
+      color: #ddd;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    button {
+      padding: 8px 15px;
+      background: #4a2c2a;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      pointer-events: auto;
+      transition: background 0.3s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #6b3f3c;
+    }
+
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      .book {
+        width: 85vw;
+        height: 70vh;
+        max-height: 500px;
+      }
+
+      .cover h1 {
+        font-size: 2em;
+      }
+
+      .cover p {
+        font-size: 1em;
+      }
+
+      .page img {
+        max-width: 150px;
+      }
+
+      .page blockquote {
+        font-size: 0.95em;
+      }
+
+      .page:not(.cover):not(.end)::before {
+        font-size: 0.8em;
+      }
+
+      .end h2 {
+        font-size: 1.5em;
+      }
+
+      .end .author-bio {
+        font-size: 0.85em;
+      }
+
+      .end .publisher {
+        font-size: 0.8em;
+      }
+
+      button {
+        padding: 6px 12px;
+        font-size: 0.8em;
+      }
+
+      .page:not(#page-9)::after {
+        width: 8px;
+        right: -1px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="book">
+    <div class="page cover" id="page-0">
+      <h1>Eternal Sparks</h1>
+      <p>A Journey of Unfading Love</p>
+    </div>
+    <div class="page" id="page-1" data-page="1">
+      <img src="March.jpeg" alt="Lily Bloom">
+      <blockquote>“Just because someone hurts you doesn’t mean you can stop loving them. It’s not a switch you can flip.”<br><cite>— Lily Bloom, It Ends with Us</cite></blockquote>
+    </div>
+    <div class="page" id="page-2" data-page="2">
+      <img src="Nov.jpeg" alt="Atlas Corrigan">
+      <blockquote>“In the future, if by some miracle you ever find yourself in the position to fall in love again... fall in love with me.”<br><cite>— Atlas Corrigan, It Ends with Us</cite></blockquote>
+    </div>
+    <div class="page" id="page-3" data-page="3">
+      <img src="trek.jpeg" alt="Lily Bloom">
+      <blockquote>“I’ll love you until my heart gives out, but I’ll destroy us both to keep you mine.”<br><cite>— Jeremy Crawford, Verity</cite></blockquote>
+    </div>
+    <div class="page" id="page-4" data-page="4">
+      <img src="kiss.jpeg" alt="Rhys Larsen">
+      <blockquote>“I’d destroy the world for you, but it’d be on my terms.”<br><cite>— Rhys Larsen, Twisted Love</cite></blockquote>
+    </div>
+    <div class="page" id="page-5" data-page="5">
+      <img src="Jan.jpeg" alt="Ava Chen">
+      <blockquote>“You’re my light, but I’ll drag you into my darkness if I have to.”<br><cite>— Ava Chen, Twisted Love</cite></blockquote>
+    </div>
+    <div class="page" id="page-6" data-page="6">
+      <img src="Dec.jpeg" alt="Vicious">
+      <blockquote>“I loved you when I hated you, and that’s the cruelest lie I’ve ever told myself.”<br><cite>— Vicious, Vicious</cite></blockquote>
+    </div>
+    <div class="page" id="page-7" data-page="7">
+      <img src="Feb.jpeg" alt="Emilia">
+      <blockquote>“You’re my cage, but I’d rather be trapped with you than free without you.”<br><cite>— Emilia, Vicious</cite></blockquote>
+    </div>
+    <div class="page" id="page-8" data-page="8">
+      <img src="sushi.jpeg" alt="Hardin Scott">
+      <blockquote>“I’m a moth to your flame, and I’ll burn myself to ashes for you.”<br><cite>— Hardin Scott, After</cite></blockquote>
+    </div>
+    <div class="page end" id="page-9">
+      <h2>About the Author</h2>
+      <p class="author-bio">Atharva weaves heart wrenching tales of love and obsession, drawing readers into worlds where passion burns brighter than fear. Atharva’s works have captivated readers worldwide.</p>
+      <p class="publisher">Published by Nih Press<br>www.nihpress.com</p>
+    </div>
+    <div class="controls">
+      <button id="prev" disabled>Previous</button>
+      <button id="next">Next</button>
+    </div>
+  </div>
+
+  <script>
+    const pages = document.querySelectorAll('.page');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    let currentPage = 0;
+
+    // Initialize z-index for all pages
+    pages.forEach((page, index) => {
+      page.style.zIndex = pages.length - index;
+    });
+
+    function updateButtons() {
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = currentPage === pages.length - 1;
+    }
+
+    function flipPage(direction) {
+      if (direction === 'next' && currentPage < pages.length - 1) {
+        pages[currentPage].classList.add('flipped');
+        currentPage++;
+      } else if (direction === 'prev' && currentPage > 0) {
+        currentPage--;
+        pages[currentPage].classList.remove('flipped');
+      }
+      updateButtons();
+    }
+
+    // Add click event to each page for next page flip
+    pages.forEach(page => {
+      page.addEventListener('click', () => {
+        if (currentPage < pages.length - 1) {
+          flipPage('next');
+        }
+      });
+    });
+
+    // Button events
+    nextBtn.addEventListener('click', () => flipPage('next'));
+    prevBtn.addEventListener('click', () => flipPage('prev'));
+
+    updateButtons();
+  </script>
+</body>
+</html>
